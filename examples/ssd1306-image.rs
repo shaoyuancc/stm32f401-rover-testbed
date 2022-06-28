@@ -13,7 +13,7 @@
 #![no_std]
 #![no_main]
 
-use panic_halt as _;
+use panic_semihosting as _;
 use stm32f4xx_hal as hal;
 
 use cortex_m_rt::ExceptionFrame;
