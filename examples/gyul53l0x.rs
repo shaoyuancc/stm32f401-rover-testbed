@@ -166,6 +166,11 @@ fn main() -> ! {
                                             i
                                         )
                                         .unwrap();
+                                        let mut text: String<50> = String::from(
+                                            "Correctly\nreceived error:\nInvalid address ",
+                                        );
+                                        text.push_str(&String::<3>::from(i)).unwrap();
+                                        show_text(&text, &mut disp);
                                         continue;
                                     }
                                 }
