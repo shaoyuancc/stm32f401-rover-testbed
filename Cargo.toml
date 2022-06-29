@@ -20,7 +20,8 @@ debounced-pin = "0.3.0"
 embedded-graphics = "0.7.1"
 ssd1306 = "0.7.0"
 # TOF Sensors
-vl53l0x = "0.3.1"
+# vl53l0x = "0.3.1"
+vl53l0x = {version = "0.3.2-alpha.0", path = "../vl53l0x"}
 
 # Uncomment for the panic example.
 # panic-itm = "0.4.1"
