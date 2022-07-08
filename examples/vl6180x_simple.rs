@@ -28,7 +28,7 @@ use shared_bus::{self, I2cProxy};
 use ssd1306::mode::BufferedGraphicsMode;
 use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
 use stm32f4xx_hal as hal;
-use vl6180x::mode::RangeContinuousMode;
+use vl6180x::RangeContinuousMode;
 use vl6180x::VL6180X;
 
 type I2cType = I2c<
@@ -110,7 +110,7 @@ fn main() -> ! {
             } else if !is_pressed {
                 was_pressed = false;
             }
-            match tof_1.read_range_blocking_mm() {
+            match tof_1.read_range_mm_blocking() {
                 Ok(range) => {
                     let mut text: String<50> = String::from("Range Continuous Poll\n");
                     text.push_str(&String::<4>::from(range)).unwrap();

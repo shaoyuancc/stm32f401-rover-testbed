@@ -5,6 +5,7 @@
 #![no_main]
 
 use core::cell::RefCell;
+use core::fmt::Write;
 
 use cortex_m::interrupt::Mutex;
 use cortex_m_rt::ExceptionFrame;
@@ -27,8 +28,7 @@ use shared_bus::{self, I2cProxy};
 use ssd1306::mode::BufferedGraphicsMode;
 use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
 use stm32f4xx_hal as hal;
-use vl6180x::mode::DynamicMode;
-use vl6180x::VL6180X;
+use vl6180x::{DynamicMode, VL6180X};
 
 use crate::hal::{pac, prelude::*};
 
@@ -96,10 +96,18 @@ fn main() -> ! {
         xshut.set_high();
         delay.delay_ms(200_u32);
         // Set up TOF distance sensor
-        let tof_config = vl6180x::Config::new();
+        let mut tof_config = vl6180x::Config::new();
+        tof_config
+            .set_ambient_analogue_gain_level(7)
+            .expect("set ambient analogue gain level");
+
+        tof_config
+            .set_ambient_result_scaler(15)
+            .expect("set ambient scaler");
         // To create sensor with default configuration:
-        let mut tof_1: TofDynamicModeType =
-            vl6180x::VL6180X::with_config(bus.acquire_i2c(), &tof_config).expect("vl");
+        let mut tof_1 = vl6180x::VL6180X::with_config(bus.acquire_i2c(), &tof_config)
+            .expect("vl")
+            .into_dynamic_mode();
 
         // Set up the display
         let interface = I2CDisplayInterface::new(bus.acquire_i2c());
@@ -218,7 +226,7 @@ fn main() -> ! {
             // While in state
             use State::*;
             match state {
-                RangeContinuousPoll => match tof_1.try_read_range_blocking_mm() {
+                RangeContinuousPoll => match tof_1.try_read_range_mm_blocking() {
                     Ok(range) => {
                         let mut text: String<50> = String::from("Range Continuous\nPoll ");
                         text.push_str(&String::<4>::from(range)).unwrap();
@@ -238,26 +246,39 @@ fn main() -> ! {
                     }
                     Err(e) => hprintln!("Error reading TOF sensor Single Poll! {:?}", e).unwrap(),
                 },
-                AmbientContinuousPoll => match tof_1.try_read_ambient_blocking() {
-                    Ok(range) => {
-                        let mut text: String<50> = String::from("Ambient Continuous\nPoll ");
-                        text.push_str(&String::<4>::from(range)).unwrap();
-                        text.push_str("mm").unwrap();
+                AmbientContinuousPoll => {
+                    match tof_1.try_read_ambient_lux_blocking() {
+                        Ok(ambient) => {
+                            let mut text: String<50> = String::from("Ambient Continuous\nPoll ");
+                            let mut val_buff: heapless::String<8> = heapless::String::new();
+                            write!(&mut val_buff, "{:08.4}", ambient).expect("f32 to str");
+                            text.push_str(&val_buff).unwrap();
+                            text.push_str(" lux").unwrap();
 
-                        show_text(&text, &mut disp);
-                    }
-                    Err(e) => hprintln!("Error reading TOF sensor Continuous! {:?}", e).unwrap(),
-                },
-                AmbientSinglePoll => match tof_1.try_poll_ambient_single_blocking() {
-                    Ok(range) => {
-                        let mut text: String<50> = String::from("Ambient Single\nPoll ");
-                        text.push_str(&String::<4>::from(range)).unwrap();
-                        text.push_str("mm").unwrap();
+                            show_text(&text, &mut disp);
+                        }
+                        Err(e) => {
+                            hprintln!("Error reading TOF sensor Continuous! {:?}", e).unwrap()
+                        }
+                    };
+                    delay.delay_ms(500_u32);
+                }
+                AmbientSinglePoll => {
+                    match tof_1.try_poll_ambient_single_blocking() {
+                        Ok(ambient) => {
+                            let mut text: String<50> = String::from("Ambient Single\nPoll ");
+                            let mut val_buff: heapless::String<8> = heapless::String::new();
+                            write!(&mut val_buff, "{:08.4}", ambient).expect("f32 to str");
+                            text.push_str(&val_buff).unwrap();
+                            text.push_str(" lux").unwrap();
 
-                        show_text(&text, &mut disp);
-                    }
-                    Err(e) => hprintln!("Error reading TOF sensor Single Poll! {:?}", e).unwrap(),
-                },
+                            show_text(&text, &mut disp);
+                        }
+                        Err(e) => {
+                            hprintln!("Error reading TOF sensor Single Poll! {:?}", e).unwrap()
+                        }
+                    };
+                }
                 // AddressCycle => show_text("Done Cycling\nAddresses", &mut disp),
                 _ => (),
             };

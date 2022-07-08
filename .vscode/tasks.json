@@ -12,7 +12,9 @@
             "label": "Cargo Build (debug)",
             "type": "process",
             "command": "cargo",
-            "args": ["build"],
+            "args": [
+                "build"
+            ],
             "problemMatcher": [
                 "$rustc"
             ],
@@ -25,7 +27,10 @@
             "label": "Cargo Build (release)",
             "type": "process",
             "command": "cargo",
-            "args": ["build", "--release"],
+            "args": [
+                "build",
+                "--release"
+            ],
             "problemMatcher": [
                 "$rustc"
             ],
@@ -35,7 +40,10 @@
             "label": "Cargo Build Examples (debug)",
             "type": "process",
             "command": "cargo",
-            "args": ["build","--examples"],
+            "args": [
+                "build",
+                "--examples"
+            ],
             "problemMatcher": [
                 "$rustc"
             ],
@@ -45,7 +53,11 @@
             "label": "Cargo Build Examples (release)",
             "type": "process",
             "command": "cargo",
-            "args": ["build","--examples", "--release"],
+            "args": [
+                "build",
+                "--examples",
+                "--release"
+            ],
             "problemMatcher": [
                 "$rustc"
             ],
@@ -55,7 +67,9 @@
             "label": "Cargo Clean",
             "type": "process",
             "command": "cargo",
-            "args": ["clean"],
+            "args": [
+                "clean"
+            ],
             "problemMatcher": [],
             "group": "build"
         },
